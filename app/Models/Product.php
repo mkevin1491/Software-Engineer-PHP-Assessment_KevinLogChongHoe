@@ -9,7 +9,24 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'price', 'image'];
+    protected $fillable = [
+        'name',
+        'description',
+        'short_description',
+        'full_description',
+        'specs',
+        'category',
+        'brand',
+        'model_no',
+        'warranty',
+        'price',
+        'image',
+    ];
+
+    protected $casts = [
+        'specs' => 'array',
+    ];
+
 
     public function cartItems()
     {

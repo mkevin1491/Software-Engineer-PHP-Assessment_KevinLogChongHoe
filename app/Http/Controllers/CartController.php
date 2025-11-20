@@ -4,31 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CartItem;
-use App\Models\Product;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
 class CartController extends Controller
 {
-
- public static function middleware(): array
+    public static function middleware(): array
     {
         return [
-            'auth', // apply auth middleware to ALL methods
-
-            // Example: you may add more route-specific middleware later
-            // new Middleware('log', only: ['index']),
-            // new Middleware('subscribed', except: ['store']),
+            'auth'
         ];
     }
-    /**
-     * Display a listing of the resource.
-     */
 
-
+    // -------------------------------------------------------------
+    // CART PAGE
+    // -------------------------------------------------------------
     public function index()
     {
         $cartItems = CartItem::with('product')
@@ -40,22 +31,15 @@ class CartController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // -------------------------------------------------------------
+    // ADD TO CART / BUY NOW
+    // -------------------------------------------------------------
     public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
+            'quantity'   => 'required|integer|min:1',
+            'buy_now'    => 'nullable|boolean'
         ]);
 
         $cartItem = CartItem::where('product_id', $request->product_id)
@@ -68,40 +52,29 @@ class CartController extends Controller
         } else {
             CartItem::create([
                 'product_id' => $request->product_id,
-                'quantity' => $request->quantity,
-                'user_id' => Auth::id()
+                'quantity'   => $request->quantity,
+                'user_id'    => Auth::id()
             ]);
         }
 
-        return response()->json(['success' => true]);
+        // If Buy Now → redirect to cart page immediately
+        if ($request->boolean('buy_now')) {
+            return redirect()->route('cart.index');
+        }
+
+        // Normal add-to-cart → stay on page but reload Inertia props
+        return redirect()->back()->with('success', 'Item added to cart.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
+    // -------------------------------------------------------------
+    // UPDATE CART ITEM
+    // -------------------------------------------------------------
     public function update(Request $request, string $id)
     {
         $request->validate([
             'quantity' => 'required|integer|min:1',
         ]);
 
-        // Ensure the cart item belongs to the authenticated user
         $cartItem = CartItem::where('id', $id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
@@ -109,24 +82,28 @@ class CartController extends Controller
         $cartItem->quantity = $request->quantity;
         $cartItem->save();
 
-        return response()->json(['success' => true]);
+        // Redirect back → Inertia reloads Cart.vue with updated data
+        return redirect()->back()->with('success', 'Quantity updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // -------------------------------------------------------------
+    // REMOVE ITEM FROM CART
+    // -------------------------------------------------------------
     public function destroy(string $id)
     {
-        // Ensure the cart item belongs to the authenticated user
         $cartItem = CartItem::where('id', $id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
         $cartItem->delete();
 
-        return response()->json(['success' => true]);
+        // Redirect back → Inertia reloads Cart.vue
+        return redirect()->back()->with('success', 'Item removed from cart.');
     }
 
+    // -------------------------------------------------------------
+    // CHECKOUT
+    // -------------------------------------------------------------
     public function checkout()
     {
         $cartItems = CartItem::with('product')
@@ -139,17 +116,16 @@ class CartController extends Controller
 
         foreach ($cartItems as $item) {
             Order::create([
-                'user_id' => Auth::id(), // assign to current user
+                'user_id'    => Auth::id(),
                 'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'status' => 'pending', // default status
+                'quantity'   => $item->quantity,
+                'status'     => 'pending',
             ]);
         }
 
-        // Clear the cart only for the current user
         CartItem::where('user_id', Auth::id())->delete();
 
         return redirect()->route('orders.index')
-            ->with('success', 'Checkout successful! Your order has been placed.');
+            ->with('success', 'Checkout successful!');
     }
 }

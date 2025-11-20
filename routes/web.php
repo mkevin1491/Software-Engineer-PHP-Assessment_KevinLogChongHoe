@@ -18,6 +18,8 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/catalogue', [ProductController::class, 'index'])->name('catalogue');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
 
 // Only authenticated users can access these routes
 Route::middleware('auth')->group(function () {
@@ -28,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
-Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+// Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
 
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

@@ -1,65 +1,52 @@
 <script setup lang="ts">
-import AddToCartModal from '@/components/CatalogueComponents/AddToCartModal.vue';
-import axios from 'axios';
-import { defineProps, ref } from 'vue';
+import { defineProps } from 'vue';
+import { Inertia } from '@inertiajs/inertia';
 
 const props = defineProps<{ products: Array<any> }>();
 
-// Modal state
-const showModal = ref(false);
-const selectedProduct = ref<any | null>(null);
-const quantity = ref(1);
-
-// Function to open modal
-function openModal(product: any) {
-    selectedProduct.value = product;
-    quantity.value = 1;
-    showModal.value = true;
-}
-
-// Function to add to cart
-function addToCart() {
-    axios
-        .post('/cart', {
-            product_id: selectedProduct.value.id,
-            quantity: quantity.value,
-        })
-        .then(() => {
-            console.log('Added to cart');
-            showModal.value = false;
-        })
-        .catch((err) => console.error(err));
+// Navigate to product page using Inertia
+function viewProduct(productId: number) {
+    Inertia.get(`/products/${productId}`);
+    console.log("ProductID is:" + productId);
 }
 </script>
 
 <template>
-    <div class="grid gap-6 p-4 md:grid-cols-3">
-        <div
-            v-for="product in props.products"
-            :key="product.id"
-            class="rounded-lg border p-4"
-        >
-            <img
-                :src="product.image"
-                class="h-48 w-full rounded-lg object-cover"
-            />
-            <h2 class="mt-2 font-semibold">{{ product.name }}</h2>
-            <p class="text-gray-600">{{ product.description }}</p>
-            <p class="mt-1 font-bold">RM {{ product.price }}</p>
-            <button
-                @click="openModal(product)"
-                class="mt-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+                v-for="product in props.products"
+                :key="product.id"
+                class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70"
+                @click="viewProduct(product.id)"
+                style="cursor: pointer;"
             >
-                Add to Cart
-            </button>
+                <div class="h-52 flex flex-col justify-center items-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-t-xl overflow-hidden">
+                    <img
+                        :src="product.image"
+                        :alt="product.name"
+                        class="w-full h-full object-cover"
+                    />
+                </div>
+                <div class="p-4 md:p-6">
+                    <span class="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-500">
+                        RM {{ product.price }}
+                    </span>
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-neutral-300 dark:hover:text-white">
+                        {{ product.name }}
+                    </h3>
+                    <p class="mt-3 text-gray-500 dark:text-neutral-500">
+                        {{ product.short_description }}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
-
-    <AddToCartModal
-        :show="showModal"
-        :product="selectedProduct"
-        :quantity="quantity"
-        @close="showModal = false"
-        @add="addToCart"
-    />
 </template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+* {
+    font-family: 'Poppins', sans-serif;
+}
+</style>
