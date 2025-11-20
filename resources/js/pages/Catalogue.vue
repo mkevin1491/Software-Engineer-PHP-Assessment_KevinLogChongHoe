@@ -7,7 +7,7 @@ const props = defineProps<{ products: Array<any> }>();
 
 // Modal state
 const showModal = ref(false);
-const selectedProduct = ref(null);
+const selectedProduct = ref<any | null>(null);
 const quantity = ref(1);
 
 // Function to open modal

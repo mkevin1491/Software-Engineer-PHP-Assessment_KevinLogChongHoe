@@ -6,18 +6,34 @@ use Illuminate\Http\Request;
 use App\Models\CartItem;
 use App\Models\Product;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
-
-
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
 class CartController extends Controller
 {
+
+ public static function middleware(): array
+    {
+        return [
+            'auth', // apply auth middleware to ALL methods
+
+            // Example: you may add more route-specific middleware later
+            // new Middleware('log', only: ['index']),
+            // new Middleware('subscribed', except: ['store']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
+
+
     public function index()
     {
-        $cartItems = CartItem::with('product')->get();
+        $cartItems = CartItem::with('product')
+            ->where('user_id', Auth::id())
+            ->get();
 
         return Inertia::render('Cart', [
             'cartItems' => $cartItems,
@@ -42,7 +58,9 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cartItem = CartItem::where('product_id', $request->product_id)->first();
+        $cartItem = CartItem::where('product_id', $request->product_id)
+            ->where('user_id', Auth::id())
+            ->first();
 
         if ($cartItem) {
             $cartItem->quantity += $request->quantity;
@@ -51,6 +69,7 @@ class CartController extends Controller
             CartItem::create([
                 'product_id' => $request->product_id,
                 'quantity' => $request->quantity,
+                'user_id' => Auth::id()
             ]);
         }
 
@@ -82,7 +101,11 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cartItem = CartItem::findOrFail($id);
+        // Ensure the cart item belongs to the authenticated user
+        $cartItem = CartItem::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
         $cartItem->quantity = $request->quantity;
         $cartItem->save();
 
@@ -94,14 +117,21 @@ class CartController extends Controller
      */
     public function destroy(string $id)
     {
-        CartItem::findOrFail($id)->delete();
+        // Ensure the cart item belongs to the authenticated user
+        $cartItem = CartItem::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $cartItem->delete();
 
         return response()->json(['success' => true]);
     }
 
     public function checkout()
     {
-        $cartItems = CartItem::with('product')->get();
+        $cartItems = CartItem::with('product')
+            ->where('user_id', Auth::id())
+            ->get();
 
         if ($cartItems->isEmpty()) {
             return back()->with('error', 'Your cart is empty.');
@@ -109,15 +139,17 @@ class CartController extends Controller
 
         foreach ($cartItems as $item) {
             Order::create([
+                'user_id' => Auth::id(), // assign to current user
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
                 'status' => 'pending', // default status
             ]);
         }
 
-        // Clear the cart
-        CartItem::truncate();
+        // Clear the cart only for the current user
+        CartItem::where('user_id', Auth::id())->delete();
 
-        return redirect()->route('orders.index')->with('success', 'Checkout successful! Your order has been placed.');
+        return redirect()->route('orders.index')
+            ->with('success', 'Checkout successful! Your order has been placed.');
     }
 }

@@ -13,7 +13,8 @@ class CartItem extends Model
     protected $fillable = [
         'cart_token',
         'product_id',
-        'quantity'
+        'quantity',
+        'user_id'
     ];
 
     public function product()

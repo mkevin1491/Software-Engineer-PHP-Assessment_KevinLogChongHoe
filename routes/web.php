@@ -19,11 +19,14 @@ Route::get('dashboard', function () {
 
 Route::get('/catalogue', [ProductController::class, 'index'])->name('catalogue');
 
-// Cart CRUD actions (for Inertia / AJAX)
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+// Only authenticated users can access these routes
+Route::middleware('auth')->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+});
 
 Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
@@ -34,4 +37,4 @@ Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.upd
 Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show'); // optional
 
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

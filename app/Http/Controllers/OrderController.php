@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Order;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -14,7 +15,10 @@ class OrderController extends Controller
     public function index()
     {
         // Load orders with product details
-        $orders = Order::with('product')->orderBy('created_at', 'desc')->get();
+        $orders = Order::with('product')
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return Inertia::render('OrderList', [
             'orders' => $orders,
