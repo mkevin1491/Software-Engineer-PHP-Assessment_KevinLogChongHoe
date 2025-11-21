@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Inertia } from '@inertiajs/inertia';
+// 👇 UPDATE 1: Use the modern router import (if using Inertia v1.0+)
+// If this errors, revert to: import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/vue3'; 
 import { defineProps, ref } from 'vue';
 
 const props = defineProps<{
@@ -9,7 +11,7 @@ const props = defineProps<{
         description: string;
         short_description: string;
         full_description: string;
-        specs?: string[]; // from DB JSON
+        specs?: string[];
         category?: string;
         brand?: string;
         model_no?: string;
@@ -25,29 +27,33 @@ const quantity = ref(1);
 function increase() {
     quantity.value++;
 }
+
 function decrease() {
     if (quantity.value > 1) quantity.value--;
 }
 
+// Add to Cart → DB cart table
 function addToCart() {
-    Inertia.post('/cart', {
+    // 👇 UPDATE 2: use router.post and preserveScroll
+    router.post('/cart', {
         product_id: props.product.id,
         quantity: quantity.value,
+    }, {
+        preserveScroll: true, // Keeps user at the same scroll position
+        onSuccess: () => {
+            // Optional: Reset quantity or show a toast notification here
+            quantity.value = 1; 
+        }
     });
 }
 
+// Buy Now → Session + redirect to checkout
 function buyNow() {
-    Inertia.post(
-        '/cart',
-        {
-            product_id: props.product.id,
-            quantity: quantity.value,
-            buy_now: true, // signal controller to redirect
-        },
-        {
-            onSuccess: () => Inertia.visit('/cart'),
-        },
-    );
+    router.post('/cart', {
+        product_id: props.product.id,
+        quantity: quantity.value,
+        buy_now: true,
+    });
 }
 </script>
 

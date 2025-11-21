@@ -18,9 +18,29 @@ const props = defineProps<{
 const showAddress = ref(false);
 const selectedPayment = ref('COD');
 
+// Check if we are in "Buy Now" mode (ID is 0)
+const isBuyNow = computed(() => {
+    return props.cartItems.length > 0 && props.cartItems[0].id === 0;
+});
+
 // Update quantity
 function updateQuantity(itemId: number, quantity: number) {
+    if (quantity < 1) return;
     Inertia.put(`/cart/${itemId}`, { quantity });
+}
+
+// Increment quantity
+function incrementQuantity(item: any) {
+    if (item.quantity < 99) {
+        updateQuantity(item.id, item.quantity + 1);
+    }
+}
+
+// Decrement quantity
+function decrementQuantity(item: any) {
+    if (item.quantity > 1) {
+        updateQuantity(item.id, item.quantity - 1);
+    }
 }
 
 // Remove item
@@ -32,9 +52,23 @@ function checkout() {
     Inertia.post('/cart/checkout');
 }
 
+// Updated Go Back Function
 function goBack() {
-    window.history.back();
+    if (isBuyNow.value) {
+        // If in Buy Now mode, clear session first, then go back
+        Inertia.post('/cart/cancel', {}, {
+            onSuccess: () => {
+                // Using replaceState to prevent forward history loops is often cleaner, 
+                // but window.history.back() mimics the standard back button.
+                window.history.back();
+            }
+        });
+    } else {
+        // Normal behavior
+        window.history.back();
+    }
 }
+
 
 // Computed values
 const subtotal = computed(() =>
@@ -124,26 +158,31 @@ const total = computed(() => subtotal.value + tax.value);
                                     Price:
                                     <span>RM {{ item.product.price }}</span>
                                 </p>
-                                <div class="flex items-center gap-1">
+                                <div class="mt-2 flex items-center gap-2">
                                     <p>Qty:</p>
-                                    <select
-                                        v-model.number="item.quantity"
-                                        @change="
-                                            updateQuantity(
-                                                item.id,
-                                                item.quantity,
-                                            )
-                                        "
-                                        class="bg-transparent outline-none dark:bg-neutral-800 dark:text-white"
+                                    <div
+                                        class="flex items-center gap-1 rounded border border-gray-300 dark:border-neutral-600"
                                     >
-                                        <option
-                                            v-for="n in 10"
-                                            :key="n"
-                                            :value="n"
+                                        <button
+                                            @click="decrementQuantity(item)"
+                                            :disabled="item.quantity <= 1"
+                                            class="px-2 py-1 text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-700"
                                         >
-                                            {{ n }}
-                                        </option>
-                                    </select>
+                                            −
+                                        </button>
+                                        <span
+                                            class="min-w-[2rem] text-center text-gray-800 dark:text-white"
+                                        >
+                                            {{ item.quantity }}
+                                        </span>
+                                        <button
+                                            @click="incrementQuantity(item)"
+                                            :disabled="item.quantity >= 99"
+                                            class="px-2 py-1 text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

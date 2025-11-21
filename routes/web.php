@@ -7,36 +7,39 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 
+// Public Routes
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
 
+Route::get('/catalogue', [ProductController::class, 'index'])->name('catalogue');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/catalogue', [ProductController::class, 'index'])->name('catalogue');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
-
-
-// Only authenticated users can access these routes
+// Authenticated Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-    Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
-    Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+
+    // --- Checkout (View & Process) ---
+    // 1. The page you see after clicking "Buy Now" or "Checkout" from cart
+    Route::get('/checkout', [CartController::class, 'checkoutView'])->name('checkout.view');
+    // 2. The action when you click "Place Order"
+    Route::post('/checkout', [CartController::class, 'checkoutProcess'])->name('checkout.process');
+
+    // --- Cart Custom Actions ---
+    Route::post('/cart/cancel', [CartController::class, 'cancel'])->name('cart.cancel');
+
+    // --- Standard Cart Resource ---
+    Route::resource('cart', CartController::class)->except(['create', 'edit', 'show']);
+
+    // --- Orders ---
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
 });
-
-// Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-
-
-Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
-Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
-Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show'); // optional
-
 
 require __DIR__ . '/settings.php';
