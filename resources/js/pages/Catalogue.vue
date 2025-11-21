@@ -17,7 +17,7 @@ function viewProduct(productId: number) {
             <div
                 v-for="product in props.products"
                 :key="product.id"
-                class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70"
+                class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 transition-all duration-300 hover:shadow-glow-light dark:hover:shadow-glow-dark hover:-translate-y-1"
                 @click="viewProduct(product.id)"
                 style="cursor: pointer;"
             >
@@ -25,7 +25,7 @@ function viewProduct(productId: number) {
                     <img
                         :src="product.image"
                         :alt="product.name"
-                        class="w-full h-full object-cover"
+                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 </div>
                 <div class="p-4 md:p-6">
@@ -46,7 +46,24 @@ function viewProduct(productId: number) {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 * {
     font-family: 'Poppins', sans-serif;
+}
+
+/* Light mode glow effect */
+.hover\:shadow-glow-light:hover {
+    box-shadow: 
+        0 10px 40px -10px rgba(59, 130, 246, 0.3),
+        0 0 0 1px rgba(59, 130, 246, 0.1),
+        0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+/* Dark mode glow effect */
+.dark .dark\:hover\:shadow-glow-dark:hover {
+    box-shadow: 
+        0 10px 40px -10px rgba(96, 165, 250, 0.5),
+        0 0 0 1px rgba(96, 165, 250, 0.2),
+        0 0 30px rgba(96, 165, 250, 0.3);
 }
 </style>
