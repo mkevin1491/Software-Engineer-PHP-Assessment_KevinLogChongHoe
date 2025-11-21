@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// 👇 UPDATE 1: Use the modern router import (if using Inertia v1.0+)
-// If this errors, revert to: import { Inertia } from '@inertiajs/inertia';
+import Navbar from '@/components/Navbar.vue';
 import { router } from '@inertiajs/vue3';
 import { defineProps, ref } from 'vue';
 
+// Define the shape of the product prop
 const props = defineProps<{
     product: {
         id: number;
@@ -23,6 +23,7 @@ const props = defineProps<{
 }>();
 
 const quantity = ref(1);
+const isProcessing = ref(false); // Prevents double-clicking
 
 function increase() {
     quantity.value++;
@@ -34,7 +35,10 @@ function decrease() {
 
 // Add to Cart → DB cart table
 function addToCart() {
-    // 👇 UPDATE 2: use router.post and preserveScroll
+    if (isProcessing.value) return;
+    
+    isProcessing.value = true;
+
     router.post(
         '/cart',
         {
@@ -42,11 +46,16 @@ function addToCart() {
             quantity: quantity.value,
         },
         {
-            preserveScroll: true, // Keeps user at the same scroll position
+            preserveScroll: true, // Crucial: Keeps page static while Navbar updates
             onSuccess: () => {
-                // Optional: Reset quantity or show a toast notification here
-                quantity.value = 1;
+                // Reset quantity on success
+                quantity.value = 1; 
+                // Note: The Navbar will automatically pick up the new 
+                // 'cartCount' from global props and trigger the pop animation.
             },
+            onFinish: () => {
+                isProcessing.value = false;
+            }
         },
     );
 }
@@ -62,13 +71,16 @@ function buyNow() {
 
 // Go back to catalogue page
 function goBack() {
-    // Navigate to the catalogue page via Inertia
     router.get('/catalogue');
 }
 </script>
 
 <template>
+    <!-- Navbar handles the Cart Icon and Animation automatically -->
+    <Navbar />
+
     <div class="mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <!-- Back Button -->
         <button
             @click="goBack"
             class="group mb-6 flex cursor-pointer items-center gap-2 font-medium text-gray-600 transition-colors hover:text-indigo-500 dark:text-neutral-400 dark:hover:text-indigo-400"
@@ -90,6 +102,7 @@ function goBack() {
             </svg>
             Back
         </button>
+
         <div class="grid gap-10 lg:grid-cols-2">
             <!-- Product Images -->
             <div class="flex flex-col gap-4">
@@ -102,12 +115,10 @@ function goBack() {
                 <!-- Thumbnails -->
                 <div class="mt-2 flex gap-2">
                     <img
-                        v-for="(img, idx) in props.product.thumbnails || [
-                            props.product.image,
-                        ]"
+                        v-for="(img, idx) in props.product.thumbnails || [props.product.image]"
                         :key="idx"
                         :src="img"
-                        class="h-20 w-20 cursor-pointer rounded-lg border object-cover hover:border-blue-500"
+                        class="h-20 w-20 cursor-pointer rounded-lg border object-cover hover:border-blue-500 transition-colors"
                     />
                 </div>
             </div>
@@ -115,9 +126,7 @@ function goBack() {
             <!-- Product Info -->
             <div class="flex flex-col justify-between">
                 <div>
-                    <h1
-                        class="text-3xl font-semibold text-gray-800 dark:text-white"
-                    >
+                    <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">
                         {{ props.product.name }}
                     </h1>
 
@@ -130,21 +139,18 @@ function goBack() {
                     </p>
 
                     <!-- Category / Brand / Model -->
-                    <div class="mt-4 space-y-1 text-gray-600">
+                    <div class="mt-4 space-y-1 text-gray-600 dark:text-gray-400">
                         <p v-if="props.product.category">
-                            <strong>Category:</strong>
-                            {{ props.product.category }}
+                            <strong>Category:</strong> {{ props.product.category }}
                         </p>
                         <p v-if="props.product.brand">
                             <strong>Brand:</strong> {{ props.product.brand }}
                         </p>
                         <p v-if="props.product.model_no">
-                            <strong>Model No:</strong>
-                            {{ props.product.model_no }}
+                            <strong>Model No:</strong> {{ props.product.model_no }}
                         </p>
                         <p v-if="props.product.warranty">
-                            <strong>Warranty:</strong>
-                            {{ props.product.warranty }}
+                            <strong>Warranty:</strong> {{ props.product.warranty }}
                         </p>
                     </div>
 
@@ -153,14 +159,11 @@ function goBack() {
                         class="mt-6"
                         v-if="props.product.specs && props.product.specs.length"
                     >
-                        <h2 class="mb-2 text-lg font-semibold">
+                        <h2 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
                             Specifications
                         </h2>
-                        <ul class="list-inside list-disc text-gray-600">
-                            <li
-                                v-for="(line, idx) in props.product.specs"
-                                :key="idx"
-                            >
+                        <ul class="list-inside list-disc text-gray-600 dark:text-gray-400">
+                            <li v-for="(line, idx) in props.product.specs" :key="idx">
                                 {{ line }}
                             </li>
                         </ul>
@@ -170,20 +173,20 @@ function goBack() {
                 <!-- Quantity & Buttons -->
                 <div class="mt-6 flex flex-col gap-4">
                     <div class="flex items-center gap-4">
-                        <span class="font-semibold">Quantity:</span>
-                        <div class="flex w-32 items-center rounded-lg border">
+                        <span class="font-semibold text-gray-800 dark:text-white">Quantity:</span>
+                        <div class="flex w-32 items-center rounded-lg border border-gray-200 dark:border-neutral-700">
                             <button
                                 @click="decrease"
-                                class="px-3 py-2 text-gray-700 hover:bg-gray-100"
+                                class="px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-neutral-800"
                             >
                                 -
                             </button>
-                            <span class="flex-1 text-center">{{
-                                quantity
-                            }}</span>
+                            <span class="flex-1 text-center text-gray-800 dark:text-white">
+                                {{ quantity }}
+                            </span>
                             <button
                                 @click="increase"
-                                class="px-3 py-2 text-gray-700 hover:bg-gray-100"
+                                class="px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-neutral-800"
                             >
                                 +
                             </button>
@@ -193,14 +196,15 @@ function goBack() {
                     <div class="flex gap-4">
                         <button
                             @click="addToCart"
-                            class="flex-1 rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700"
+                            :disabled="isProcessing"
+                            class="flex-1 rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
                         >
-                            Add to Cart
+                            {{ isProcessing ? 'Adding...' : 'Add to Cart' }}
                         </button>
 
                         <button
                             @click="buyNow"
-                            class="flex-1 rounded-lg bg-orange-500 py-3 font-semibold text-white hover:bg-orange-600"
+                            class="flex-1 rounded-lg bg-orange-500 py-3 font-semibold text-white hover:bg-orange-600 transition-all active:scale-[0.98]"
                         >
                             Buy Now
                         </button>
@@ -211,8 +215,8 @@ function goBack() {
 
         <!-- Full Description -->
         <div class="mt-10">
-            <h2 class="mb-4 text-2xl font-semibold">Product Description</h2>
-            <p class="whitespace-pre-line text-gray-600">
+            <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Product Description</h2>
+            <p class="whitespace-pre-line text-gray-600 dark:text-gray-400">
                 {{ props.product.full_description }}
             </p>
         </div>

@@ -179,7 +179,9 @@ class CartController extends Controller
                 $buyNow['quantity'] = $request->quantity;
                 session(['buy_now' => $buyNow]);
             }
-            return redirect()->back();
+            return redirect()->back()->with([
+                'cartCount' => CartItem::where('user_id', Auth::id())->sum('quantity'),
+            ]);
         }
 
         // Normal DB Item
@@ -190,7 +192,9 @@ class CartController extends Controller
         $cartItem->quantity = $request->quantity;
         $cartItem->save();
 
-        return redirect()->back();
+        return redirect()->back()->with([
+            'cartCount' => CartItem::where('user_id', Auth::id())->sum('quantity'),
+        ]);
     }
 
     // -------------------------------------------------------------
@@ -214,7 +218,21 @@ class CartController extends Controller
 
     public function cancel()
     {
+        $redirectRoute = 'catalogue'; // Default fallback
+
+        // 1. Check if we have a product ID in the session to go back to
+        if (session()->has('buy_now')) {
+            $buyNow = session('buy_now');
+            if (isset($buyNow['product_id'])) {
+                // Redirect back to the specific product page
+                return redirect()->route('products.show', $buyNow['product_id']);
+            }
+        }
+
+        // 2. Clear the session
         session()->forget('buy_now');
-        return redirect()->route('cart.index');
+
+        // 3. Redirect
+        return redirect()->route($redirectRoute);
     }
 }
