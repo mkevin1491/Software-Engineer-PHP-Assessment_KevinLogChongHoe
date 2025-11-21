@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // 👇 UPDATE 1: Use the modern router import (if using Inertia v1.0+)
 // If this errors, revert to: import { Inertia } from '@inertiajs/inertia';
-import { router } from '@inertiajs/vue3'; 
+import { router } from '@inertiajs/vue3';
 import { defineProps, ref } from 'vue';
 
 const props = defineProps<{
@@ -35,16 +35,20 @@ function decrease() {
 // Add to Cart → DB cart table
 function addToCart() {
     // 👇 UPDATE 2: use router.post and preserveScroll
-    router.post('/cart', {
-        product_id: props.product.id,
-        quantity: quantity.value,
-    }, {
-        preserveScroll: true, // Keeps user at the same scroll position
-        onSuccess: () => {
-            // Optional: Reset quantity or show a toast notification here
-            quantity.value = 1; 
-        }
-    });
+    router.post(
+        '/cart',
+        {
+            product_id: props.product.id,
+            quantity: quantity.value,
+        },
+        {
+            preserveScroll: true, // Keeps user at the same scroll position
+            onSuccess: () => {
+                // Optional: Reset quantity or show a toast notification here
+                quantity.value = 1;
+            },
+        },
+    );
 }
 
 // Buy Now → Session + redirect to checkout
@@ -55,10 +59,37 @@ function buyNow() {
         buy_now: true,
     });
 }
+
+// Go back to catalogue page
+function goBack() {
+    // Navigate to the catalogue page via Inertia
+    router.get('/catalogue');
+}
 </script>
 
 <template>
     <div class="mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <button
+            @click="goBack"
+            class="group mb-6 flex cursor-pointer items-center gap-2 font-medium text-gray-600 transition-colors hover:text-indigo-500 dark:text-neutral-400 dark:hover:text-indigo-400"
+        >
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M12.5 16.667 5.833 10l6.667-6.667"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+            Back
+        </button>
         <div class="grid gap-10 lg:grid-cols-2">
             <!-- Product Images -->
             <div class="flex flex-col gap-4">

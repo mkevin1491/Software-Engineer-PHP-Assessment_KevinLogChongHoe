@@ -30,15 +30,20 @@ class OrderController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // 1. Fix Validation: Allow all statuses present in your frontend dropdown
         $request->validate([
-            'status' => 'required|in:pending,completed',
+            'status' => 'required|in:pending,shipped,delivered,cancelled,completed',
         ]);
 
-        $order = Order::findOrFail($id);
+        // 2. Security: Ensure the user owns this order
+        $order = Order::where('user_id', Auth::id())->findOrFail($id);
+
+        // 3. Update
         $order->status = $request->status;
         $order->save();
 
-        return response()->json(['success' => true, 'status' => $order->status]);
+        // 4. Fix Return: Redirect back so Inertia reloads the data
+        return redirect()->back()->with('success', 'Order status updated!');
     }
 
     /**
