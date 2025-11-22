@@ -8,13 +8,13 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 
 // Public Routes
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
+// Route::get('/', function () {
+//     return Inertia::render('Welcome', [
+//         'canRegister' => Features::enabled(Features::registration()),
+//     ]);
+// })->name('home');
 
-Route::get('/catalogue', [ProductController::class, 'index'])->name('catalogue');
+Route::get('/', [ProductController::class, 'index'])->name('catalogue');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('dashboard', function () {
