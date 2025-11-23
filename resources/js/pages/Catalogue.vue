@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import Navbar from '@/components/Navbar.vue';
-import { Inertia } from '@inertiajs/inertia';
-
+import { Link, router } from '@inertiajs/vue3'; // Use Link for pagination
 import { defineProps } from 'vue';
 
-const props = defineProps<{ products: Array<any> }>();
+// 1. Define the structure of the Laravel Pagination Object
+const props = defineProps<{
+    products: {
+        data: Array<any>;
+        from: number;
+        to: number;
+        total: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    };
+    searchTerm?: string;
+}>();
 
-// Navigate to product page using Inertia
 function viewProduct(productId: number) {
-    Inertia.get(`/products/${productId}`);
-    console.log('ProductID is:' + productId);
+    router.get(`/products/${productId}`);
 }
 </script>
 
 <template>
-    <Navbar />
+    <Navbar :search="props.searchTerm" />
+
     <div class="mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <!-- Product Grid -->
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- 2. Loop through 'products.data' instead of 'products' -->
             <div
-                v-for="product in props.products"
+                v-for="product in props.products.data"
                 :key="product.id"
                 class="group hover:shadow-glow-light dark:hover:shadow-glow-dark flex h-full flex-col rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 dark:border-neutral-700 dark:bg-neutral-900 dark:shadow-neutral-700/70"
                 @click="viewProduct(product.id)"
@@ -49,6 +60,67 @@ function viewProduct(productId: number) {
                     </p>
                 </div>
             </div>
+        </div>
+
+        <!-- 3. Pagination Section -->
+        <!-- Only show if we have products -->
+        <div
+            v-if="props.products.total > 0"
+            class="mt-12 flex flex-col items-center gap-4"
+        >
+            <!-- Help text -->
+            <span class="text-sm text-gray-700 dark:text-gray-400">
+                Showing
+                <span class="font-semibold text-gray-900 dark:text-white">
+                    {{ props.products.from }}
+                </span>
+                to
+                <span class="font-semibold text-gray-900 dark:text-white">
+                    {{ props.products.to }}
+                </span>
+                of
+                <span class="font-semibold text-gray-900 dark:text-white">
+                    {{ props.products.total }}
+                </span>
+                Entries
+            </span>
+
+            <!-- Buttons -->
+            <div class="inline-flex -space-x-px rounded-md shadow-sm">
+                <!-- Previous Button -->
+                <!-- We use 'component' tag to dynamically render a Link or a Span depending on if URL exists -->
+                <component
+                    :is="props.products.prev_page_url ? Link : 'span'"
+                    :href="props.products.prev_page_url"
+                    :class="[
+                        'inline-flex items-center rounded-s-lg border px-4 py-2 text-sm font-medium',
+                        props.products.prev_page_url
+                            ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:bg-neutral-700 dark:hover:text-white'
+                            : 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-600',
+                    ]"
+                >
+                    Previous
+                </component>
+
+                <!-- Next Button -->
+                <component
+                    :is="props.products.next_page_url ? Link : 'span'"
+                    :href="props.products.next_page_url"
+                    :class="[
+                        'inline-flex items-center rounded-e-lg border px-4 py-2 text-sm font-medium',
+                        props.products.next_page_url
+                            ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:bg-neutral-700 dark:hover:text-white'
+                            : 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-600',
+                    ]"
+                >
+                    Next
+                </component>
+            </div>
+        </div>
+
+        <!-- Empty State (if search returns 0 results) -->
+        <div v-else class="mt-20 text-center">
+            <p class="text-gray-500">No products found.</p>
         </div>
     </div>
 </template>

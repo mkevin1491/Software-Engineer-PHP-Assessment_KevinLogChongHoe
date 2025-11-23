@@ -14,7 +14,7 @@ use App\Http\Controllers\OrderController;
 //     ]);
 // })->name('home');
 
-Route::get('/', [ProductController::class, 'index'])->name('catalogue');
+Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('dashboard', function () {

@@ -6,33 +6,34 @@ import { computed, onMounted, ref, watch } from 'vue';
 const props = defineProps<{
     cartItems?: Array<{ id: number; quantity: number }>;
     user?: { name: string; email: string } | null;
+    search?: string;
 }>();
 
 const page = usePage();
 
 // 2. Smart Cart Count
 const cartCount = computed(() => {
-    // Priority 1: Props passed explicitly
     if (props.cartItems) {
         return props.cartItems.reduce((sum, item) => sum + item.quantity, 0);
     }
-
-    // Priority 2: Global Shared Props
-    // We check page.props directly for reactivity
     return (page.props.cartCount as number) || 0;
+});
+
+// Helper to check if actually logged in (ignoring the 'Guest' fallback)
+const isAuthenticated = computed(() => {
+    return !!(props.user || page.props.auth?.user);
 });
 
 const currentUser = computed(() => {
     return props.user || page.props.auth?.user || { name: 'Guest', email: '' };
 });
 
-// 3. 👇 NEW: Force Update on Mount (Fixes "Back Button" Stale Data)
+// 3. Force Update on Mount
 onMounted(() => {
-    // This tells Inertia: "Keep the page as is, but go ask the server
-    // specifically for the 'cartCount' right now."
-    router.reload({
-        only: ['cartCount'],
-    });
+    // Only reload cart count if user is logged in to avoid unnecessary calls
+    if (isAuthenticated.value) {
+        router.reload({ only: ['cartCount'] });
+    }
 });
 
 // 4. Animation Logic
@@ -47,13 +48,17 @@ watch(cartCount, (newVal, oldVal) => {
     }
 });
 
+
 // 5. Search & Menu Logic
 const showMenu = ref(false);
-const searchQuery = ref('');
+const searchQuery = ref(props.search || '');
 
 function handleSearch() {
     if (searchQuery.value.trim()) {
-        router.get('/catalogue', { search: searchQuery.value });
+        router.get('/', { search: searchQuery.value }, {
+        });
+    } else {
+        router.get('/');
     }
 }
 </script>
@@ -129,78 +134,100 @@ function handleSearch() {
             </div>
 
             <!-- Right Side Icons -->
-            <div class="flex shrink-0 items-center gap-x-2">
-                <!-- Cart Button -->
-                <Link
-                    href="/cart"
-                    class="relative flex size-9.5 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-800 transition hover:bg-gray-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
-                >
-                    <span class="sr-only">Cart</span>
-                    <svg
-                        class="size-4 shrink-0"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+            <div class="flex shrink-0 items-center gap-x-3">
+                <!-- OPTION 1: User is Logged In -->
+                <template v-if="isAuthenticated">
+                    <!-- Cart Button -->
+                    <Link
+                        href="/cart"
+                        class="relative flex size-9.5 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-800 transition hover:bg-gray-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
                     >
-                        <circle cx="8" cy="21" r="1" />
-                        <circle cx="19" cy="21" r="1" />
-                        <path
-                            d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"
-                        />
-                    </svg>
+                        <span class="sr-only">Cart</span>
+                        <svg
+                            class="size-4 shrink-0"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="8" cy="21" r="1" />
+                            <circle cx="19" cy="21" r="1" />
+                            <path
+                                d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"
+                            />
+                        </svg>
 
-                    <!-- Cart Count Badge -->
-                    <span
-                        v-if="cartCount > 0"
-                        :class="{ 'bump-animation': isAnimating }"
-                        class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm transition-transform"
-                    >
-                        {{ cartCount }}
-                    </span>
-                </Link>
+                        <!-- Cart Count Badge -->
+                        <span
+                            v-if="cartCount > 0"
+                            :class="{ 'bump-animation': isAnimating }"
+                            class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm transition-transform"
+                        >
+                            {{ cartCount }}
+                        </span>
+                    </Link>
 
-                <!-- Profile Menu -->
-                <div class="relative">
-                    <button
-                        @click="showMenu = !showMenu"
-                        class="flex size-9.5 items-center justify-center rounded-xl border border-gray-200 bg-white transition hover:bg-gray-100 dark:border-neutral-700 dark:bg-neutral-900"
-                    >
-                        <img
-                            :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}`"
-                            class="h-6 w-6 rounded-full"
-                        />
-                    </button>
-                    <div
-                        v-if="showMenu"
-                        class="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-                    >
+                    <!-- Profile Menu -->
+                    <div class="relative">
+                        <button
+                            @click="showMenu = !showMenu"
+                            class="flex size-9.5 items-center justify-center rounded-xl border border-gray-200 bg-white transition hover:bg-gray-100 dark:border-neutral-700 dark:bg-neutral-900"
+                        >
+                            <img
+                                :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}`"
+                                class="h-6 w-6 rounded-full"
+                            />
+                        </button>
                         <div
-                            class="border-b border-gray-200 px-4 py-3 dark:border-neutral-700"
+                            v-if="showMenu"
+                            class="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
                         >
-                            <p
-                                class="text-sm font-semibold text-gray-800 dark:text-white"
+                            <div
+                                class="border-b border-gray-200 px-4 py-3 dark:border-neutral-700"
                             >
-                                {{ currentUser.name }}
-                            </p>
-                            <p class="truncate text-xs text-gray-500">
-                                {{ currentUser.email }}
-                            </p>
+                                <p
+                                    class="text-sm font-semibold text-gray-800 dark:text-white"
+                                >
+                                    {{ currentUser.name }}
+                                </p>
+                                <p class="truncate text-xs text-gray-500">
+                                    {{ currentUser.email }}
+                                </p>
+                            </div>
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                class="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
+                            >
+                                Logout
+                            </Link>
                         </div>
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            class="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
-                            >Logout</Link
-                        >
                     </div>
-                </div>
+                </template>
+
+                <!-- OPTION 2: User is Guest (Not Logged In) -->
+                <template v-else>
+                    <div class="flex items-center gap-2">
+                        <Link
+                            href="/login"
+                            class="inline-flex items-center justify-center rounded-lg border border-transparent px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-800"
+                        >
+                            Log in
+                        </Link>
+                        <Link
+                            href="/register"
+                            class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                        >
+                            Register
+                        </Link>
+                    </div>
+                </template>
             </div>
         </nav>
     </header>

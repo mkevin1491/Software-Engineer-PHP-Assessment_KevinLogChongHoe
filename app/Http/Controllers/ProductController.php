@@ -11,12 +11,31 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
+        // 1. Start a query builder
+        $query = Product::query();
 
+        // 2. Check if the user sent a search term
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+
+            // 3. Filter by name or description
+            // We wrap this in a closure function($q) to group the OR logic safely
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('short_description', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 4. Execute the query
+        $products = $query->paginate(9)->withQueryString();
+
+        // 5. Return data to Vue
         return Inertia::render('Catalogue', [
-            'products' => $products
+            'products' => $products,
+            // Pass the search term back so the Navbar can display it
+            'searchTerm' => $request->input('search'),
         ]);
     }
 
