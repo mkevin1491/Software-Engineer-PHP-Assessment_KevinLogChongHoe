@@ -17,6 +17,7 @@ use App\Http\Controllers\OrderController;
 Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
