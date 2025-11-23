@@ -2,6 +2,7 @@
 import Navbar from '@/components/Navbar.vue';
 import { router } from '@inertiajs/vue3';
 import { defineProps, ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
 
 // Define the shape of the product prop
 const props = defineProps<{
@@ -76,9 +77,10 @@ function goBack() {
 </script>
 
 <template>
+    <Head title="Products" />
     <!-- Navbar handles the Cart Icon and Animation automatically -->
     <Navbar />
-
+    
     <div class="mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <!-- Back Button -->
         <button

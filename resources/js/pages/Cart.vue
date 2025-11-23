@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed, defineProps, ref } from 'vue';
+import Navbar from '@/components/Navbar.vue';
 
 const props = defineProps<{
     cartItems: Array<{
@@ -92,6 +93,8 @@ const total = computed(() => subtotal.value + tax.value);
 </script>
 
 <template>
+    <Head title="Checkout" />
+    <Navbar />
     <div class="mx-auto flex w-full max-w-6xl flex-col px-6 py-16 md:flex-row">
         <div class="max-w-4xl flex-1">
             <!-- Back Button (Same as before) -->

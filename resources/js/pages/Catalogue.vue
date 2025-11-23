@@ -2,6 +2,7 @@
 import Navbar from '@/components/Navbar.vue';
 import { Link, router } from '@inertiajs/vue3'; // Use Link for pagination
 import { defineProps } from 'vue';
+import { Head } from '@inertiajs/vue3';
 
 // 1. Define the structure of the Laravel Pagination Object
 const props = defineProps<{
@@ -23,6 +24,7 @@ function viewProduct(productId: number) {
 
 <template>
     <Navbar :search="props.searchTerm" />
+    <Head title="MyShop" />
 
     <div class="mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <!-- Product Grid -->

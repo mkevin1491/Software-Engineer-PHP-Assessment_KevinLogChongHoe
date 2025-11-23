@@ -32,7 +32,7 @@ class OrderController extends Controller
     {
         // 1. Fix Validation: Allow all statuses present in your frontend dropdown
         $request->validate([
-            'status' => 'required|in:pending,shipped,delivered,cancelled,completed',
+            'status' => 'required|in:cancelled,delivered',
         ]);
 
         // 2. Security: Ensure the user owns this order

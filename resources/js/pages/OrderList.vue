@@ -4,6 +4,7 @@ import type { PageProps as BasePageProps } from '@inertiajs/core';
 import { Inertia } from '@inertiajs/inertia';
 import { usePage } from '@inertiajs/vue3';
 import { defineProps, onMounted, ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
 
 const props = defineProps<{
     orders: Array<{
@@ -84,16 +85,6 @@ function getStatusConfig(status: string) {
             badge: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800',
             icon: '⏱️',
         },
-        processing: {
-            label: 'Processing',
-            badge: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
-            icon: '⚙️',
-        },
-        shipped: {
-            label: 'Shipped',
-            badge: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
-            icon: '🚚',
-        },
         delivered: {
             label: 'Delivered',
             badge: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
@@ -110,6 +101,7 @@ function getStatusConfig(status: string) {
 </script>
 
 <template>
+    <Head title="Purchased Item" />
     <Navbar />
     <!-- Toast Notification (Top Right) -->
     <Transition
@@ -417,7 +409,6 @@ function getStatusConfig(status: string) {
                                 class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
                             >
                                 <option value="pending">⏱️ Pending</option>
-                                <option value="shipped">🚚 Shipped</option>
                                 <option value="delivered">✅ Delivered</option>
                                 <option value="cancelled">❌ Cancelled</option>
                             </select>

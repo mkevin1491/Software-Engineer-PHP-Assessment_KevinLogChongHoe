@@ -52,7 +52,7 @@ class GoogleController extends Controller
             }
         } catch (Exception $e) {
             // It's better to redirect to login with an error than throw a 500 error
-            // dd('Error:', $e->getMessage());
+            dd('Error:', $e->getMessage());
             return redirect('/login')->with('error', 'Something went wrong with Google Login: ' . $e->getMessage());     
         }
     }
