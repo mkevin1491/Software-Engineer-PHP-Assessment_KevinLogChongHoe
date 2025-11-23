@@ -69,7 +69,7 @@ function removeItem(itemId: number) {
 }
 
 function checkout() {
-    router.post('/cart/checkout');
+    router.post('/checkout');
 }
 
 function goBack() {

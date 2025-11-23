@@ -48,15 +48,13 @@ watch(cartCount, (newVal, oldVal) => {
     }
 });
 
-
 // 5. Search & Menu Logic
 const showMenu = ref(false);
 const searchQuery = ref(props.search || '');
 
 function handleSearch() {
     if (searchQuery.value.trim()) {
-        router.get('/', { search: searchQuery.value }, {
-        });
+        router.get('/', { search: searchQuery.value }, {});
     } else {
         router.get('/');
     }
@@ -199,6 +197,13 @@ function handleSearch() {
                                     {{ currentUser.email }}
                                 </p>
                             </div>
+                            <!-- Orders Link -->
+                            <Link
+                                href="/orders"
+                                class="block w-full px-4 py-2.5 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-800"
+                            >
+                                Orders
+                            </Link>
                             <Link
                                 href="/logout"
                                 method="post"

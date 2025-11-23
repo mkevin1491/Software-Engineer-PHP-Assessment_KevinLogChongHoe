@@ -139,7 +139,7 @@ class CartController extends Controller
             // Note: We do NOT delete from DB Cart here. 
             // Buy Now is a separate transaction.
 
-            return redirect()->route('orders.index')->with('success', 'Order placed!');
+            return redirect()->route('orders.index')->with('success', 'Checkout successful!');
         }
 
         // B. PROCESS NORMAL CART

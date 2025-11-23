@@ -71,7 +71,7 @@ function buyNow() {
 
 // Go back to catalogue page
 function goBack() {
-    router.get('/catalogue');
+    router.get('/');
 }
 </script>
 

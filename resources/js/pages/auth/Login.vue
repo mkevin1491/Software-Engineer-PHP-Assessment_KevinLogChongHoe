@@ -17,6 +17,10 @@ defineProps<{
     canResetPassword: boolean;
     canRegister: boolean;
 }>();
+
+function googleLogin() {
+    window.location.href = '/auth/google';
+}
 </script>
 
 <template>
@@ -53,6 +57,7 @@ defineProps<{
                     <button
                         type="button"
                         class="inline-flex w-full items-center justify-center gap-x-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                        @click="googleLogin"
                     >
                         <svg
                             class="h-auto w-4"
